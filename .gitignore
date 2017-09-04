@@ -301,3 +301,14 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
+# JetBrains files
+.idea/
+
+# Build Files
+Debug/
+cmake-build-debug/
+.vscode/
+.vs/
+
+WpcapCpp.vcxproj.filters
