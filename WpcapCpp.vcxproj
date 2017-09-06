@@ -100,12 +100,31 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="arp.cpp" />
+    <ClCompile Include="ethernet.cpp" />
+    <ClCompile Include="igmp.cpp" />
+    <ClCompile Include="ipv4.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="pcap.cpp" />
+    <ClCompile Include="tcp.cpp" />
+    <ClCompile Include="udp.cpp" />
+    <ClCompile Include="utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cmake-build-debug\cmakefiles\3.8.2\CMakeDetermineCompilerABI_C.bin" />
     <None Include="cmake-build-debug\cmakefiles\3.8.2\CMakeDetermineCompilerABI_CXX.bin" />
     <None Include="cmake-build-debug\cmakefiles\feature_tests.bin" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="arp.h" />
+    <ClInclude Include="defines.h" />
+    <ClInclude Include="ethernet.h" />
+    <ClInclude Include="igmp.h" />
+    <ClInclude Include="ipv4.h" />
+    <ClInclude Include="pcap.h" />
+    <ClInclude Include="tcp.h" />
+    <ClInclude Include="udp.h" />
+    <ClInclude Include="utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
