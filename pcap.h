@@ -60,6 +60,8 @@ extern PFreeAllDevs pcapFreeAllDevs;
 extern PPCAPOpen pcapOpen;
 extern PPCAPNextEx pcapNextEx;
 
-int processNetworkInterfaces(char **ifaceName);
+Result processNetworkInterfaces(char **ifaceName);
 
+Result processPacket(const uint8_t* pktData,
+                     struct pcap_pkthdr* pktHdr);
 //void initPcap();

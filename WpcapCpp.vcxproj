@@ -103,7 +103,7 @@
     <ClCompile Include="arp.cpp" />
     <ClCompile Include="ethernet.cpp" />
     <ClCompile Include="igmp.cpp" />
-    <ClCompile Include="ipv4.cpp" />
+    <ClCompile Include="ip.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="pcap.cpp" />
     <ClCompile Include="tcp.cpp" />
@@ -120,7 +120,7 @@
     <ClInclude Include="defines.h" />
     <ClInclude Include="ethernet.h" />
     <ClInclude Include="igmp.h" />
-    <ClInclude Include="ipv4.h" />
+    <ClInclude Include="ip.h" />
     <ClInclude Include="pcap.h" />
     <ClInclude Include="tcp.h" />
     <ClInclude Include="udp.h" />

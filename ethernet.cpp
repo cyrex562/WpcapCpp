@@ -3,8 +3,9 @@
 
 #include "defines.h"
 #include "ethernet.h"
+#include "utils.h"
 
-#define _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS 1
 
 /*
 * Convert an Ethernet address to a string.
@@ -30,9 +31,11 @@ void processLLCFrame(const uint8_t* pktData, uint32_t ptr) {
     if (llcHdr->DSAPAddr == LSAP8021BrSTP || llcHdr->SSAPAddr == LSAP8021BrSTP) {
         ptr += 3;
         BridgePDU* stpHdr = (BridgePDU*)(&pktData[ptr]);
-        printf("LLC frame is a STP BPDU\n");
+        log(LLDebug, "LLC frame is a STP BPDU\n");
     }
     else {
-        printf("unhandled LLC frame type\n");
+        log(LLWarning, "unhandled LLC frame type\n: DSAP: %02x, SSAP:%02x\n", 
+            llcHdr->DSAPAddr, 
+            llcHdr->SSAPAddr);
     }
 }

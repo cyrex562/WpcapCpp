@@ -8,140 +8,147 @@
 #include "defines.h"
 #include "utils.h"
 #include "pcap.h"
-#include "ethernet.h"
-#include "ipv4.h"
-#include "tcp.h"
-#include "udp.h"
-#include "arp.h"
-#include "igmp.h"
 
 #define _CRT_SECURE_NO_DEPRECATE
 #define _CRT_SECURE_NO_WARNINGS
 
 HMODULE hLib;
 
+void signalHandler(int sigNum);
+Result initFuncPtrs();
+void prolog();
+void initSigHandlers();
+
 /*
  * Main entry function.
  */
 int main() {
-    printf("loading library\n");
-    hLib = LoadLibrary("wpcap.dll");
-    if (hLib == NULL) {
-        printf("failed to load library wpcap.dll\n");
-        return -1;
-    }
-
-    /*initPcap();*/
-
-    printf("getting proc addrs\n");
-    pcapFindAllDevs = (PPCAPFindAllDevs)GetProcAddress(hLib, "pcap_findalldevs");
-    if (pcapFindAllDevs == NULL) {
-        printf("failed to get proc addr for pcap_findalldevs\n");
-        return -1;
-    }
-
-    pcapFreeAllDevs = (PFreeAllDevs)GetProcAddress(hLib, "pcap_freealldevs");
-    if (pcapFreeAllDevs == NULL) {
-        printf("failed to get proc addr for pcap_freealldevs\n");
-        return -1;
-    }
-
-    pcapOpen = (PPCAPOpen)GetProcAddress(hLib, "pcap_open");
-    if (pcapOpen == NULL) {
-        printf("failed to get proc addr for pcap_open_live\n");
-        return -1;
-    }
-
-    pcapNextEx = (PPCAPNextEx)GetProcAddress(hLib, "pcap_next_ex");
-    if (pcapNextEx == NULL) {
-        printf("failed to get proc addr for pcap_next_ex\n");
-        return -1;
-    }
-     
-    char *ifaceName;
-    processNetworkInterfaces(&ifaceName);
-     
+    char *ifaceName = NULL;
     char errBuf[PCAP_ERR_BUF_SZ] = { 0 };
-    auto pcapHandle = pcapOpen(ifaceName,
-                               65535,
-                               1,
-                               1000,
-                               NULL,
-                               errBuf);
+    Result result = ResNotSet;
+    pcap_t* pcapHandle = NULL;
+    struct pcap_pkthdr* pktHdr = NULL;
+    const unsigned char* pktData = NULL;
+    int pcapNextResult = 0;
+
+    // register the signal SIGINT and signal handler
+    initSigHandlers();
+
+    result = initFuncPtrs();
+    if (result != ResSuccess) {
+        log(LLError, "Failed to initialize function pointers\n");
+        return ResError;
+    }
+    
+    processNetworkInterfaces(&ifaceName);
+
+    pcapHandle = pcapOpen(ifaceName,
+                          65535,
+                          1,
+                          1000,
+                          NULL,
+                          errBuf);
     if (pcapHandle == NULL) {
-        printf("pcapOpen failed: %s\n", errBuf);
-        return -1;
+        log(LLError, "pcapOpen failed: %s\n", errBuf);
+        prolog();
+        return ResError;
     }
 
-    struct pcap_pkthdr* pktHdr;
-    const unsigned char* pktData;
     while (true) {
-        auto result = pcapNextEx(pcapHandle,
-                            &pktHdr,
-                            &pktData);
-        if (result == 0) {
-            printf("timeout ocurred\n");
+        pcapNextResult = pcapNextEx(pcapHandle,
+                                    &pktHdr,
+                                    &pktData);
+        if (pcapNextResult == 0) {
+            log(LLWarning, "Timeout ocurred\n");
         }
-        else if (result == -1) {
-            printf("error occurred\n");
-            return -1;
-        }
-        else if (result == -2) {
-            printf("EOF occurred\n");
+        else if (pcapNextResult == -1) {
+            log(LLError, "Error occurred\n");
+            result = ResError;
             break;
         }
-        else if (result == 1) {
-            printf("packet captured\n");
-            auto ptr = 0;
-            auto ethHdr = (struct EthernetHeader *)(&pktData[ptr]);
-            ptr += ETH_HDR_LEN;
-            auto ethPayload = (uint8_t*)&pktData[ptr];
-            auto ethPayloadLen = (size_t)(pktHdr->caplen - ETH_HDR_LEN);
-
-            printf("src mac addr: %s ", etherAddrToStr(&ethHdr->srcMacAddr));
-            printf("dst mac addr: %s ", etherAddrToStr(&ethHdr->dstMacAddr));
-            auto etherType = (size_t)_ntohs(ethHdr->etherTypeNO);
-            printf("ether Type: %04x (%hu)\n", etherType, etherType);
-
-            if (etherType < 1500) {
-                printf("packet is not ethernet II\n");
-                printBytes(ethPayload, ethPayloadLen);
-                processLLCFrame(pktData, ptr);
-            }
-            else if (etherType >= 1536) {
-                printf("packet is ethernet II\n");
-                if (etherType == ETypeIP) {
-                    processIPFrame(pktData, ptr);
-                }
-                else if (etherType == ETypeARP) {
-                    processARPFrame(pktData, ptr);
-                }
-                else if (etherType == ETypeIPV6) {
-                    printf("next header is IPV6\n");
-                    // TODO: implement IPV6 parsing
-                }
-                else if (etherType == ETypeLLDP) {
-                    printf("next header is LLDP\n");
-                    // TODO: implement LLDP parsing
-                } 
-                else if (etherType == 0x9104) {
-                    printf("anomalous ether type 0x9104\n");
-                    printBytes(ethPayload, ethPayloadLen);
-                }
-                else {
-                    printf("unhandled etherType: %hu\n", etherType);
-                    printBytes(ethPayload, ethPayloadLen);
-                }
-            }
-            else {
-                printf("invalid etherType: %hu\n", etherType);
+        else if (pcapNextResult == -2) {
+            log(LLWarning, "EOF occurred\n");
+            break;
+        }
+        else if (pcapNextResult == 1) {
+            result = processPacket(pktData, pktHdr);
+            if (result != ResSuccess) {
+                break;
             }
         }
         else {
             printf("invalid result: %u\n", result);
-            return -1;
+            result = ResError;
+            break;
         }
     }
 
-    return 0;
+    prolog();
+
+    return result;
+}
+
+
+
+
+void signalHandler(int sigNum) {
+    printf("interrupt signal %i received\n", sigNum);
+    // TODO: perform cleanup
+    exit(sigNum);
+}
+
+Result initFuncPtrs() {
+    // TODO: initialize pcap function pointers based on OS
+    log(LLDebug, "Loading Windows PCAP Library\n");
+    hLib = LoadLibrary("wpcap.dll");
+    if (hLib == NULL) {
+        log(LLError, "Failed to load library wpcap.dll\n");
+        return ResError;
+    }
+
+    log(LLDebug, "Getting function addresses for PCAP function pointers\n");
+    pcapFindAllDevs = (PPCAPFindAllDevs)GetProcAddress(hLib, "pcap_findalldevs");
+    if (pcapFindAllDevs == NULL) {
+        log(LLError, "Failed to get proc addr for pcap_findalldevs\n");
+        prolog();
+        return ResError;
+    }
+
+    pcapFreeAllDevs = (PFreeAllDevs)GetProcAddress(hLib, "pcap_freealldevs");
+    if (pcapFreeAllDevs == NULL) {
+        log(LLError, "Failed to get proc addr for pcap_freealldevs\n");
+        prolog();
+        return ResError;
+    }
+
+    pcapOpen = (PPCAPOpen)GetProcAddress(hLib, "pcap_open");
+    if (pcapOpen == NULL) {
+        log(LLError, "Failed to get proc addr for pcap_open_live\n");
+        prolog();
+        return ResError;
+    }
+
+    pcapNextEx = (PPCAPNextEx)GetProcAddress(hLib, "pcap_next_ex");
+    if (pcapNextEx == NULL) {
+        log(LLError, "Failed to get proc addr for pcap_next_ex\n");
+        prolog();
+        return ResError;
+    }
+
+    return ResSuccess;
+}
+
+void prolog() {
+    if (hLib != NULL) {
+        FreeLibrary(hLib);
+    }
+}
+
+void initSigHandlers() {
+    signal(SIGINT, signalHandler);
+    signal(SIGABRT, signalHandler);
+    signal(SIGFPE, signalHandler);
+    signal(SIGILL, signalHandler);
+    signal(SIGSEGV, signalHandler);
+    signal(SIGTERM, signalHandler);
 }

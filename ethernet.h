@@ -38,7 +38,7 @@ struct EthernetAddress {
 struct EthernetHeader {
     struct EthernetAddress srcMacAddr;
     struct EthernetAddress dstMacAddr;
-    uint16_t etherTypeNO;
+    uint16_t etherType;
 };
 
 /*

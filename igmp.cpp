@@ -12,5 +12,5 @@ void processIGMPFrame(const uint8_t* pktData, uint32_t ptr) {
     printf("code: %hhu ", igmpHdr->code);
     printf("identifier: %08x ", igmpHdr->identifier);
     printf("groupAddress: %08x ", igmpHdr->groupAddress);
-    printf("accessKey: %016x\n", igmpHdr->accessKey);
+    printf("accessKey: %016llx\n", igmpHdr->accessKey);
 }
