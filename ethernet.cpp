@@ -13,7 +13,7 @@
 char* etherAddrToStr(EthernetAddress* etherAddrBytes) {
     // XX:XX:XX:XX:XX:XX
     static char etherAddrStr[19] = { 0 };
-    sprintf(etherAddrStr, "%02x:%02x:%02x:%02x:%02x:%02x",
+    sprintf(etherAddrStr, "%02X:%02X:%02X:%02X:%02X:%02X",
         etherAddrBytes->addr[0],
         etherAddrBytes->addr[1],
         etherAddrBytes->addr[2],
@@ -27,10 +27,11 @@ char* etherAddrToStr(EthernetAddress* etherAddrBytes) {
 * Proces an LLC frame.
 */
 void processLLCFrame(const uint8_t* pktData, uint32_t ptr) {
-    LLCHeader* llcHdr = (LLCHeader*)(&pktData[ptr]);
-    if (llcHdr->DSAPAddr == LSAP8021BrSTP || llcHdr->SSAPAddr == LSAP8021BrSTP) {
+    auto llcHdr = (LLCHeader*)(&pktData[ptr]);
+    if (llcHdr->DSAPAddr == LSAP8021BrSTP || 
+        llcHdr->SSAPAddr == LSAP8021BrSTP) {
         ptr += 3;
-        BridgePDU* stpHdr = (BridgePDU*)(&pktData[ptr]);
+        auto stpHdr = (BridgePDU*)(&pktData[ptr]);
         log(LLDebug, "LLC frame is a STP BPDU\n");
     }
     else {

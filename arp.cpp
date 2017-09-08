@@ -5,6 +5,9 @@
 #include "arp.h"
 #include "utils.h"
 
+/*
+ *
+ */
 char *arpHTypeToStr(uint16_t hType) {
     static char arpHtypeStr[64] = { 0 };
     switch(hType) {
@@ -49,6 +52,51 @@ char *arpHTypeToStr(uint16_t hType) {
     }
     return arpHtypeStr;
 }
+ 
+/*
+ *
+ */
+char *arpPTypeToStr(uint16_t pType) {
+    static char arpPTypeStr[64] = { 0 };
+    switch(pType) {
+    case pTypeIP:
+        sprintf(arpPTypeStr, "%s", "IPv4");
+        break;
+    default:
+        sprintf(arpPTypeStr, "unk (%hu)", pType);
+    }
+    return arpPTypeStr;
+}
+
+/*
+ *
+ */
+char *arpOpToStr(uint16_t opCode) {
+    static char arpOpCodeStr[64] = { 0 };
+    switch(opCode) {
+    case arpOpReserved:
+        sprintf(arpOpCodeStr, "%s", "Reserved");
+        break;
+    case arpOpRequest:
+        sprintf(arpOpCodeStr, "%s", "Request");
+        break;
+    case arpOpReply:
+        sprintf(arpOpCodeStr, "%s", "Reply");
+        break;
+    case arpOpReqRev:
+        sprintf(arpOpCodeStr, "%s", "Request Reverse");
+        break;
+    case arpOpRepRev:
+        sprintf(arpOpCodeStr, "%s", "Reply Reverse");
+        break;
+    case arpOpARPNAK:
+        sprintf(arpOpCodeStr, "%s", "ARP NAK");
+        break;
+    default:
+        sprintf(arpOpCodeStr, "unk (%hu)", opCode);
+    }
+    return  arpOpCodeStr;
+}
 
 /*
 * Process an ARP frame.
@@ -56,15 +104,15 @@ char *arpHTypeToStr(uint16_t hType) {
 void processARPFrame(const uint8_t* pktData, uint32_t ptr) {
     printf("ARP Frame\n");
     auto arpHdr = (struct ARPHeader*)&pktData[ptr];
-    // TODO: convert hType to string
     auto hType = _ntohs(arpHdr->hType);
-    printf("\thtype: %s (%#04x)\n", arpHTypeToStr(hType), hType);
-    // TODO: convert pType to string
-    printf("\tptype: %#04x\n", _ntohs(arpHdr->pType));
-    printf("\thLen: %#02x\n", arpHdr->hLen);
-    printf("\tpLen: %0#2x\n", arpHdr->pLen);
+    auto pType = _ntohs(arpHdr->pType);
+    auto opCode = _ntohs(arpHdr->operation);
+    printf("\tHTYPE: %s (%#04x)\n", arpHTypeToStr(hType), hType);
+    printf("\tPTYPE: %s (%#04x)\n", arpPTypeToStr(pType), pType);
+    printf("\tHLEN: %#02x\n", arpHdr->hLen);
+    printf("\tPLEN: %0#2x\n", arpHdr->pLen);
     // TODO: convert opcode to string
-    printf("\toper: %#04x\n", _ntohs(arpHdr->operation));
+    printf("\tOPER: %s (%#04x)\n", arpOpToStr(opCode), opCode);
     printf("\tSHA: %s\n", etherAddrToStr(&arpHdr->sndHWAddr));
     printf("\tSPA: %s\n", ipv4AddrToStr(&arpHdr->sndProtoAddr));
     printf("\tTHA: %s\n", etherAddrToStr(&arpHdr->tgtHWAddr));
