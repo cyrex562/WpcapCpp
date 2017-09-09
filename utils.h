@@ -14,3 +14,4 @@ uint32_t _ntohl(uint32_t in32);
 void log(LogLevel level, const char* fmt, ...);
 void printBytes(const uint8_t* bytes, size_t count);
 char *addrFamToStr(int addrFam);
+void printBytesAndText(const uint8_t* bytes, size_t count);

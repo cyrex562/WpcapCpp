@@ -142,7 +142,7 @@ Result processNetworkInterfaces(char **ifaceName) {
 
 Result processPacket(const uint8_t* pktData,
     struct pcap_pkthdr* pktHdr) {
-    log(LLDebug, "Packet captured\n");
+    log(LLDebug, "\n\n** PACKET **\n");
     auto ptr = 0;
     auto ethHdr = (struct EthernetHeader *)(&pktData[ptr]);
     ptr += ETH_HDR_LEN;
@@ -150,8 +150,8 @@ Result processPacket(const uint8_t* pktData,
     auto ethPayloadLen = (size_t)(pktHdr->caplen - ETH_HDR_LEN);
     auto etherType = (size_t)_ntohs(ethHdr->etherType);
     auto result = ResSuccess;
-
-    log(LLDebug, "src mac addr: %s, dst mac addr: %s, ether Type: %04x (%hu)\n",
+    log(LLDebug, "Ethernet Frame: \n");
+    log(LLDebug, " SRC MAC: %s\n DST MAC: %s\n Ether Type: %#04x (%hu)\n",
         etherAddrToStr(&ethHdr->srcMacAddr),
         etherAddrToStr(&ethHdr->dstMacAddr),
         etherType,

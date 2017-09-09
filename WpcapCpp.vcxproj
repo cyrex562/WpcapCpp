@@ -114,6 +114,7 @@
     <None Include="cmake-build-debug\cmakefiles\3.8.2\CMakeDetermineCompilerABI_C.bin" />
     <None Include="cmake-build-debug\cmakefiles\3.8.2\CMakeDetermineCompilerABI_CXX.bin" />
     <None Include="cmake-build-debug\cmakefiles\feature_tests.bin" />
+    <None Include="readme.md" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="arp.h" />

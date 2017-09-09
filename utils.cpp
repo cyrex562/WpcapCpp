@@ -62,6 +62,44 @@ void printBytes(const uint8_t* bytes, size_t count) {
 }
 
 
+void printBytesAndText(const uint8_t* bytes, size_t count) {
+//OO: BB BB BB BB BB BB BB BB BB BB | T T T T T T T T T T\n
+    auto offset = 0;
+    auto nonPrintable = '\xfe';
+    auto newLine = true;
+    size_t j = 0;
+    for (size_t i = 0; i<  count; i++) {
+        printf("%04x: ", offset);
+
+        for (j = 0; j < 10; j++) {
+            if (i + j >= count) {
+                printf("XX ");
+            } else {
+                printf("%02x ", bytes[i + j]);
+            }
+        } 
+
+        printf("| ");
+
+        for (j = 0; j < 10; j++) {
+            if (i + j >= count) {
+                printf("%c ", 178);
+            } else {
+                auto ch = bytes[i + j];
+                if (ch < 20 || ch > 127) {
+                    ch = nonPrintable;
+                }
+
+                printf("%c ", ch);
+            }
+        }
+
+        printf("\n");
+        i += j - 1;
+        offset += 10;
+    }
+}
+
 char *addrFamToStr(int addrFam) {
     static char addrFamStr[64] = { 0 };
     if (addrFam == AF_UNSPEC) {

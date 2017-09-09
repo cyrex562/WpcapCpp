@@ -29,11 +29,11 @@ char* ipv4AddrToStr(IPV4Address* inAddr) {
 * Process an IP Frame.
 */
 void processIPFrame(const uint8_t* pktData, uint32_t ptr) {
-    log(LLDebug, "next header is IPv4\n");
+    log(LLDebug, "IPv4 Frame:\n");
     auto ipHdr = (struct ipv4Header*)&pktData[ptr];
     size_t ipPayloadLen = _ntohs(ipHdr->totalLength) - (ipHdr->intHdrLen * 4);
     if (ipHdr->intHdrLen > 5) {
-        log(LLInfo, "IP header has options\n");
+        log(LLDebug, " IP header has options\n");
         auto optPtr = ptr + IPV4_HDR_LEN;
         auto optBytes = (ipHdr->intHdrLen * 4) - IPV4_HDR_LEN;
         auto optSpec = (struct IPOptionSpec*)&pktData[optPtr];
@@ -47,24 +47,21 @@ void processIPFrame(const uint8_t* pktData, uint32_t ptr) {
 
     }
     ptr += ipHdr->intHdrLen * 4;
-    log(LLDebug, "src addr: %s ", ipv4AddrToStr(&ipHdr->srcAddr));
-    log(LLDebug, "dst addr: %s ", ipv4AddrToStr(&ipHdr->dstAddr));
-    log(LLDebug, "proto: %02x (%hhu)\n", ipHdr->proto, ipHdr->proto);
+    log(LLDebug, " SRC ADDR: %s\n", ipv4AddrToStr(&ipHdr->srcAddr));
+    log(LLDebug, " DST ADDR: %s\n", ipv4AddrToStr(&ipHdr->dstAddr));
+    log(LLDebug, " IP Proto: %02x (%hhu)\n", ipHdr->proto, ipHdr->proto);
     if (ipHdr->proto == 6) {
-        log(LLDebug, "tcp header follows\n");
         processTCPFrame(pktData, ptr, ipPayloadLen);
     }
     else if (ipHdr->proto == IPPIGMP) {
-        log(LLDebug, "IGMP header follows\n");
         processIGMPFrame(pktData, ptr);
     }
     else if (ipHdr->proto == IPPUDP) {
-        log(LLDebug, "UDP header follows\n");
         processUDPFrame(pktData, ptr);
     }
     else if (ipHdr->proto == IPPPIM) {
-        log(LLDebug, "PIM header follows\n");
         // TODO: implement PIM header parsing.
+        printBytesAndText(&pktData[ptr], ipPayloadLen);
     }
     else {
         log(LLWarning, "Unhandled IP proto: %02x (%hhu)\n", ipHdr->proto, ipHdr->proto);
