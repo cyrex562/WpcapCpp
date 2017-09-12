@@ -19,9 +19,28 @@
 
 #define NON_ETHER_MAX_LEN 1500
 #define ETHER_TYPE_MIN_VAL 1536
+#define MAX_PKT_LEN 0xffff
+
+typedef uint16_t sa_family_t;
 
 enum Result {
     ResSuccess = 0,
     ResError = -1,
     ResNotSet = INT32_MAX
+};
+
+struct timeval {
+    long tv_sec;
+    long tv_usec;
+};
+
+struct sockaddr {
+    sa_family_t sa_family;
+    char sa_data[14];
+};
+
+struct Packet {
+    struct timeval timeStamp;
+    size_t packetLength;
+    uint8_t data[MAX_PKT_LEN];
 };

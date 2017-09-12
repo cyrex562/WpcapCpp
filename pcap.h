@@ -5,7 +5,7 @@ typedef struct pcap_dumper pcap_dumper_t;
 typedef struct pcap_if pcap_if_t;
 typedef struct pcap_addr pcap_addr_t;
 typedef struct pcap_rmtauth pcap_rmtauth_t;
-typedef uint16_t sa_family_t;
+
 
 // pcap_findalldevs
 typedef int(*PPCAPFindAllDevs)(pcap_if_t**, char*);
@@ -16,10 +16,7 @@ typedef pcap_t* (*PPCAPOpen)(const char*, int, int, int, struct pcap_rmtauth*, c
 // int 	pcap_next_ex(pcap_t *, struct pcap_pkthdr **, const u_char **);
 typedef int(*PPCAPNextEx)(pcap_t*, struct pcap_pkthdr**, const uint8_t**);
 
-struct timeval {
-    long tv_sec;
-    long tv_usec;
-};
+
 
 struct pcap_pkthdr {
     struct timeval ts; /* time stamp */
@@ -34,10 +31,7 @@ struct pcap_rmtauth {
     char* password;
 };
 
-struct sockaddr {
-    sa_family_t sa_family;
-    char sa_data[14];
-};
+
 
 struct pcap_addr {
     struct pcap_addr* next;

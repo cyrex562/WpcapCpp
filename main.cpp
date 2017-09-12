@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <cstdio>
 #include <csignal>
+#include <iostream>
+#include <vector>
 #include <windows.h>
 
 #include "defines.h"
@@ -13,6 +15,8 @@
 #define _CRT_SECURE_NO_WARNINGS
 
 HMODULE hLib;
+
+std::vector<struct Packet> packetTable;
 
 void signalHandler(int sigNum);
 Result initFuncPtrs();
@@ -54,6 +58,9 @@ int main() {
         return ResError;
     }
 
+    /*
+     * Grab a packet from the source. Make a copy of the packet.
+     */
     while (true) {
         pcapNextResult = pcapNextEx(pcapHandle,
                                     &pktHdr,
@@ -71,6 +78,11 @@ int main() {
             break;
         }
         else if (pcapNextResult == 1) {
+            static Packet currPacket = { 0 };
+            memcpy(currPacket.data, pktData, pktHdr->caplen);
+            currPacket.packetLength = pktHdr->len;
+            currPacket.timeStamp = pktHdr->ts;
+
             result = processPacket(pktData, pktHdr);
             if (result != ResSuccess) {
                 break;
