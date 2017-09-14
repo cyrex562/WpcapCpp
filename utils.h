@@ -15,3 +15,4 @@ void log(LogLevel level, const char* fmt, ...);
 void printBytes(const uint8_t* bytes, size_t count);
 char *addrFamToStr(int addrFam);
 void printBytesAndText(const uint8_t* bytes, size_t count);
+int endianness(void);

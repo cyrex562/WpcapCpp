@@ -56,6 +56,7 @@ extern PPCAPNextEx pcapNextEx;
 
 Result processNetworkInterfaces(char **ifaceName);
 
-Result processPacket(const uint8_t* pktData,
-                     struct pcap_pkthdr* pktHdr);
+//Result processPacket(const uint8_t* pktData,
+//                     struct pcap_pkthdr* pktHdr);
+Result processPacket(PacketRingBuffer* pktRingBuf);
 //void initPcap();

@@ -6,10 +6,11 @@
 #include "ethernet.h"
 #include "ip.h"
 #include "arp.h"
-
+#include "PacketRingBuffer.h"
 #include "pcap.h"
 
-#define _CRT_SECURE_NO_WARNINGS 1
+
+#define _CRT_SECURE_NO_WARNINGS
 
 //void initPcap() {
 //    PPCAPFindAllDevs pcapFindAllDevs = NULL;
@@ -140,14 +141,22 @@ Result processNetworkInterfaces(char **ifaceName) {
     return ResSuccess;
 }
 
-Result processPacket(const uint8_t* pktData,
-    struct pcap_pkthdr* pktHdr) {
+//Result processPacket(const uint8_t* pktData,
+//                     struct pcap_pkthdr* pktHdr) {
+Result processPacket(PacketRingBuffer* pktRingBuf) {
     log(LLDebug, "\n\n** PACKET **\n");
+    
+    /* pulling a packet from the ringbuffer currently requires an additional copy operation because the ringbuffer pops the packet when retrieving it. We should figure out a way to 'access' the packet rather than copying, but still allow packets to be overrun. */
+    Packet* ringBufPkt = ringBufGet(pktRingBuf);
+    Packet pktInfo = { 0 };
+    memcpy(&pktInfo, ringBufPkt, sizeof(Packet));
+    uint8_t* pktData = &pktInfo.data[0];
     auto ptr = 0;
+
     auto ethHdr = (struct EthernetHeader *)(&pktData[ptr]);
     ptr += ETH_HDR_LEN;
     auto ethPayload = (uint8_t*)&pktData[ptr];
-    auto ethPayloadLen = (size_t)(pktHdr->caplen - ETH_HDR_LEN);
+    auto ethPayloadLen = (size_t)(pktInfo.packetLength - ETH_HDR_LEN);
     auto etherType = (size_t)_ntohs(ethHdr->etherType);
     auto result = ResSuccess;
     log(LLDebug, "Ethernet Frame: \n");

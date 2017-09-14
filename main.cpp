@@ -9,14 +9,15 @@
 
 #include "defines.h"
 #include "utils.h"
+#include "packetringbuffer.h"
 #include "pcap.h"
 
 #define _CRT_SECURE_NO_DEPRECATE
 #define _CRT_SECURE_NO_WARNINGS
 
 HMODULE hLib;
-
-std::vector<struct Packet> packetTable;
+//std::vector<struct Packet> packetTable;
+struct PacketRingBuffer pktRingBuf = { 0 };
 
 void signalHandler(int sigNum);
 Result initFuncPtrs();
@@ -83,7 +84,11 @@ int main() {
             currPacket.packetLength = pktHdr->len;
             currPacket.timeStamp = pktHdr->ts;
 
-            result = processPacket(pktData, pktHdr);
+            // push the packet onto the ringBuffer
+            auto ringBufResult = ringBufPut(&pktRingBuf, &currPacket);
+
+            //result = processPacket(pktData, pktHdr);
+            result = processPacket(&pktRingBuf);
             if (result != ResSuccess) {
                 break;
             }

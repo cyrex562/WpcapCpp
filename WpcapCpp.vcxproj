@@ -105,6 +105,7 @@
     <ClCompile Include="igmp.cpp" />
     <ClCompile Include="ip.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="packetringbuffer.cpp" />
     <ClCompile Include="pcap.cpp" />
     <ClCompile Include="tcp.cpp" />
     <ClCompile Include="udp.cpp" />
@@ -122,6 +123,7 @@
     <ClInclude Include="ethernet.h" />
     <ClInclude Include="igmp.h" />
     <ClInclude Include="ip.h" />
+    <ClInclude Include="PacketRingBuffer.h" />
     <ClInclude Include="pcap.h" />
     <ClInclude Include="tcp.h" />
     <ClInclude Include="udp.h" />

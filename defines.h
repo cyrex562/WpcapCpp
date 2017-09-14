@@ -21,7 +21,50 @@
 #define ETHER_TYPE_MIN_VAL 1536
 #define MAX_PKT_LEN 0xffff
 
+#define RING_BUF_SZ 256
+
+#ifdef __ANDROID__
+#define ANDROID 1
+#endif
+
+#ifdef __linux__
+#define LINUX 1
+#endif
+
+#ifdef _WIN32
+#define WIN32 1
+#endif
+
+#ifdef _WIN64
+#define WIN64 1
+#endif
+
+#ifdef __amd64__ || __x86_64__ || _M_AMD64
+#define X64 1
+#endif
+
+#ifdef __arm__ || __thumb__ || _M_ARM || _M_ARMT
+#define ARM 1
+#endif
+
+#ifdef _M_IX86 || _M_IX86 || _X86_ || __i386__
+#define X86 1
+#endif
+
+
+/*
+ * Big endian	    __BYTE_ORDER	__BIG_ENDIAN
+ * Little endian    __BYTE_ORDER	__LITTLE_ENDIAN
+ */
+
 typedef uint16_t sa_family_t;
+
+enum {
+    EndianUnkown,
+    EndianBig,
+    EndianLittle
+};
+
 
 enum Result {
     ResSuccess = 0,
@@ -44,3 +87,6 @@ struct Packet {
     size_t packetLength;
     uint8_t data[MAX_PKT_LEN];
 };
+
+
+
