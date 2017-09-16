@@ -85,7 +85,7 @@ int main() {
             currPacket.timeStamp = pktHdr->ts;
 
             // push the packet onto the ringBuffer
-            auto ringBufResult = ringBufPut(&pktRingBuf, &currPacket);
+            auto ringBufResult = pushRingBufEle(&pktRingBuf, &currPacket);
 
             //result = processPacket(pktData, pktHdr);
             result = processPacket(&pktRingBuf);

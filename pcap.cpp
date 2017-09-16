@@ -147,7 +147,7 @@ Result processPacket(PacketRingBuffer* pktRingBuf) {
     log(LLDebug, "\n\n** PACKET **\n");
     
     /* pulling a packet from the ringbuffer currently requires an additional copy operation because the ringbuffer pops the packet when retrieving it. We should figure out a way to 'access' the packet rather than copying, but still allow packets to be overrun. */
-    Packet* ringBufPkt = ringBufGet(pktRingBuf);
+    Packet* ringBufPkt = getRingBufEle(pktRingBuf);
     Packet pktInfo = { 0 };
     memcpy(&pktInfo, ringBufPkt, sizeof(Packet));
     uint8_t* pktData = &pktInfo.data[0];
