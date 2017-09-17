@@ -1,4 +1,7 @@
 #pragma once
+#include <cstdint>
+#include "defines.h"
+#include <vector>
 
 struct IPOptionSpec {
     //    u8 option: 7;
@@ -9,16 +12,8 @@ struct IPOptionSpec {
     uint8_t option : 7;
 };
 
-
-struct IPV4Address {
-    union {
-        uint32_t i;
-        uint8_t b[4];
-    };
-};
-
 enum IPProtoNum {
-    IPPHOPOT = 0,
+    IPPHopOpt = 0,
     IPPICMP = 1,
     IPPIGMP = 2,
     IPPIPV4Encap = 4,
@@ -46,30 +41,28 @@ enum IPProtoNum {
 
 };
 
-struct ipv4Header {
+struct IPV4Header {
     // Little Endian
     // IHL = number of dwords in header
-    uint8_t intHdrLen : 4;
+    uint8_t hdr_len : 4;
     uint8_t version : 4;
-    uint8_t dffSvcCodePoint : 6;
-    uint8_t expCongestNotif : 2;
+    uint8_t diff_svc_code_pt : 6;
+    uint8_t explicit_congest_notif : 2;
     // packet size including IP header
-    uint16_t totalLength;
+    uint16_t tot_len;
     // IP ID
     uint16_t ident;
     // fragment data
-    uint16_t fragOff : 13;
+    uint16_t frag_off : 13;
     uint16_t flags : 3;
     // time-to-live
-    uint8_t timeToLive;
+    uint8_t time_to_live;
     // IP protocol number
     uint8_t proto;
     // IP header checksum
     uint16_t checksum;
-    struct IPV4Address srcAddr;
-    struct IPV4Address dstAddr;
+    struct IPV4Address src_addr;
+    struct IPV4Address dst_addr;
 };
 
-char* ipv4AddrToStr(IPV4Address* addr);
-
-void processIPFrame(const uint8_t* pktData, uint32_t ptr);
+void ProcessIPV4Frame(std::vector<PacketInfo> packet_table, size_t index);

@@ -6,56 +6,53 @@
 #include <iostream>
 #include <vector>
 #include <windows.h>
-
 #include "defines.h"
 #include "utils.h"
-#include "packetringbuffer.h"
 #include "pcap.h"
 
-#define _CRT_SECURE_NO_DEPRECATE
-#define _CRT_SECURE_NO_WARNINGS
-
 HMODULE hLib;
-//std::vector<struct Packet> packetTable;
-struct PacketRingBuffer pktRingBuf = { 0 };
+std::vector<struct PacketInfo> packetTable;
+//struct PacketRingBuffer pkt_ring_buf = { 0 };
 
 void signalHandler(int sigNum);
-Result initFuncPtrs();
-void prolog();
+Result InitFuncPtrs();
+void Prolog();
 void initSigHandlers();
 
 /*
  * Main entry function.
  */
 int main() {
-    char *ifaceName = NULL;
-    char errBuf[PCAP_ERR_BUF_SZ] = { 0 };
-    Result result = ResNotSet;
-    pcap_t* pcapHandle = NULL;
-    struct pcap_pkthdr* pktHdr = NULL;
-    const unsigned char* pktData = NULL;
-    int pcapNextResult = 0;
-
     // register the signal SIGINT and signal handler
     initSigHandlers();
 
-    result = initFuncPtrs();
+//    result = ResetRingBuf(&pkt_ring_buf);
+//    if (result != ResSuccess) {
+//        LogError("%s: failed to initialize packet ring buf\n", __func__);
+//    }
+
+    auto result = InitFuncPtrs();
     if (result != ResSuccess) {
-        log(LLError, "Failed to initialize function pointers\n");
+        LogError("%s: Failed to initialize function pointers\n", __func__);
         return ResError;
     }
     
-    processNetworkInterfaces(&ifaceName);
+    char *iface_name = NULL;
+    result = SelectNetworkInterface(&iface_name);
+    if (result != ResSuccess) {
+        LogError("%s: Failed to process network interfaces\n", __func__);
+    }
 
-    pcapHandle = pcapOpen(ifaceName,
+    char err_buf[PCAP_ERR_BUF_SZ] = { 0 };
+    auto pcap_handle = pcapOpen(iface_name,
                           65535,
                           1,
                           1000,
                           NULL,
-                          errBuf);
-    if (pcapHandle == NULL) {
-        log(LLError, "pcapOpen failed: %s\n", errBuf);
-        prolog();
+                          err_buf);
+    if (pcap_handle == NULL) {
+        LogError("pcapOpen failed: %s\n", err_buf);
+        Prolog();
         return ResError;
     }
 
@@ -63,32 +60,43 @@ int main() {
      * Grab a packet from the source. Make a copy of the packet.
      */
     while (true) {
-        pcapNextResult = pcapNextEx(pcapHandle,
-                                    &pktHdr,
-                                    &pktData);
-        if (pcapNextResult == 0) {
-            log(LLWarning, "Timeout ocurred\n");
+        PCAPPacketHeader* packet_header = NULL;
+        const uint8_t* pkt_data = NULL;
+        auto pcap_next_result = pcapNextEx(pcap_handle,
+                                    &packet_header,
+                                    &pkt_data);
+        if (pcap_next_result == 0) {
+            LogWarning("Timeout ocurred\n");
         }
-        else if (pcapNextResult == -1) {
-            log(LLError, "Error occurred\n");
+        else if (pcap_next_result == -1) {
+            LogError("Error occurred\n");
             result = ResError;
             break;
         }
-        else if (pcapNextResult == -2) {
-            log(LLWarning, "EOF occurred\n");
+        else if (pcap_next_result == -2) {
+            LogWarning("EOF occurred\n");
             break;
         }
-        else if (pcapNextResult == 1) {
-            static Packet currPacket = { 0 };
-            memcpy(currPacket.data, pktData, pktHdr->caplen);
-            currPacket.packetLength = pktHdr->len;
-            currPacket.timeStamp = pktHdr->ts;
+        else if (pcap_next_result == 1) {
+            PacketInfo curr_packet = { 0 };
+            memcpy(curr_packet.data, pkt_data, packet_header->caplen);
+            curr_packet.packet_length = packet_header->len;
+            curr_packet.time_stamp = packet_header->ts;
+            curr_packet.labels[curr_packet.label_ptr++] = PLPCAP;
+
+            // push the packet into the packet table
+            packetTable.push_back(curr_packet);
+            auto index = packetTable.size() - 1;
+            LogDebug("%s: packet table size: %zu\n", __func__, packetTable.size());
 
             // push the packet onto the ringBuffer
-            auto ringBufResult = pushRingBufEle(&pktRingBuf, &currPacket);
+//            auto ring_buf_result = PushRingBufEle(&pkt_ring_buf, &curr_packet);
+//            if (ring_buf_result != ResSuccess) {
+//                LogError("%s: Failed to push packet onto ring buffer\n", __func__);
+//            }
 
-            //result = processPacket(pktData, pktHdr);
-            result = processPacket(&pktRingBuf);
+            //result = ProcessPacket(pktData, pktHdr);
+            result = ProcessPacket(packetTable, index);
             if (result != ResSuccess) {
                 break;
             }
@@ -100,7 +108,7 @@ int main() {
         }
     }
 
-    prolog();
+    Prolog();
 
     return result;
 }
@@ -114,48 +122,48 @@ void signalHandler(int sigNum) {
     exit(sigNum);
 }
 
-Result initFuncPtrs() {
+Result InitFuncPtrs() {
     // TODO: initialize pcap function pointers based on OS
-    log(LLDebug, "Loading Windows PCAP Library\n");
+    Log(LLDebug, "Loading Windows PCAP Library\n");
     hLib = LoadLibrary("wpcap.dll");
     if (hLib == NULL) {
-        log(LLError, "Failed to load library wpcap.dll\n");
+        Log(LLError, "Failed to load library wpcap.dll\n");
         return ResError;
     }
 
-    log(LLDebug, "Getting function addresses for PCAP function pointers\n");
+    Log(LLDebug, "Getting function addresses for PCAP function pointers\n");
     pcapFindAllDevs = (PPCAPFindAllDevs)GetProcAddress(hLib, "pcap_findalldevs");
     if (pcapFindAllDevs == NULL) {
-        log(LLError, "Failed to get proc addr for pcap_findalldevs\n");
-        prolog();
+        Log(LLError, "Failed to get proc addr for pcap_findalldevs\n");
+        Prolog();
         return ResError;
     }
 
     pcapFreeAllDevs = (PFreeAllDevs)GetProcAddress(hLib, "pcap_freealldevs");
     if (pcapFreeAllDevs == NULL) {
-        log(LLError, "Failed to get proc addr for pcap_freealldevs\n");
-        prolog();
+        Log(LLError, "Failed to get proc addr for pcap_freealldevs\n");
+        Prolog();
         return ResError;
     }
 
     pcapOpen = (PPCAPOpen)GetProcAddress(hLib, "pcap_open");
     if (pcapOpen == NULL) {
-        log(LLError, "Failed to get proc addr for pcap_open_live\n");
-        prolog();
+        Log(LLError, "Failed to get proc addr for pcap_open_live\n");
+        Prolog();
         return ResError;
     }
 
     pcapNextEx = (PPCAPNextEx)GetProcAddress(hLib, "pcap_next_ex");
     if (pcapNextEx == NULL) {
-        log(LLError, "Failed to get proc addr for pcap_next_ex\n");
-        prolog();
+        Log(LLError, "Failed to get proc addr for pcap_next_ex\n");
+        Prolog();
         return ResError;
     }
 
     return ResSuccess;
 }
 
-void prolog() {
+void Prolog() {
     if (hLib != NULL) {
         FreeLibrary(hLib);
     }

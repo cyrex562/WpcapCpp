@@ -1,5 +1,8 @@
 #pragma once
 
+#include <vector>
+#include "defines.h"
+
 typedef struct pcap pcap_t;
 typedef struct pcap_dumper pcap_dumper_t;
 typedef struct pcap_if pcap_if_t;
@@ -13,13 +16,13 @@ typedef int(*PPCAPFindAllDevs)(pcap_if_t**, char*);
 typedef void(*PFreeAllDevs)(pcap_if_t*);
 // pcap_t	*pcap_open_live(const char *, int, int, int, char *);
 typedef pcap_t* (*PPCAPOpen)(const char*, int, int, int, struct pcap_rmtauth*, char*);
-// int 	pcap_next_ex(pcap_t *, struct pcap_pkthdr **, const u_char **);
-typedef int(*PPCAPNextEx)(pcap_t*, struct pcap_pkthdr**, const uint8_t**);
+// int 	pcap_next_ex(pcap_t *, struct PCAPPacketHeader **, const u_char **);
+typedef int(*PPCAPNextEx)(pcap_t*, struct PCAPPacketHeader**, const uint8_t**);
 
 
 
-struct pcap_pkthdr {
-    struct timeval ts; /* time stamp */
+struct PCAPPacketHeader {
+    struct TimeVal ts; /* time stamp */
     uint32_t caplen; /* length of portion present */
     uint32_t len; /* length this packet (off wire) */
 };
@@ -54,9 +57,10 @@ extern PFreeAllDevs pcapFreeAllDevs;
 extern PPCAPOpen pcapOpen;
 extern PPCAPNextEx pcapNextEx;
 
-Result processNetworkInterfaces(char **ifaceName);
+Result SelectNetworkInterface(char **ifaceName);
 
-//Result processPacket(const uint8_t* pktData,
-//                     struct pcap_pkthdr* pktHdr);
-Result processPacket(PacketRingBuffer* pktRingBuf);
+//Result ProcessPacket(const uint8_t* pktData,
+//                     struct PCAPPacketHeader* pktHdr);
+//Result ProcessPacket(std::vector<PacketInfo>* packet_table, size_t index);
+Result ProcessPacket(std::vector<PacketInfo> packet_table, size_t index);
 //void initPcap();

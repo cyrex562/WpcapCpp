@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 #define MAC_ADDR_LEN 6
 #define ETH_HDR_LEN 14
 #define IPV4_HDR_LEN 20
@@ -39,25 +41,26 @@
 #define WIN64 1
 #endif
 
-#ifdef __amd64__ || __x86_64__ || _M_AMD64
+#if defined(__amd64__) || defined(__x86_64__) || defined(_M_AMD64)
 #define X64 1
 #endif
 
-#ifdef __arm__ || __thumb__ || _M_ARM || _M_ARMT
+#if defined(__arm__) || defined(__thumb__) || defined(_M_ARM) || defined(_M_ARMT)
 #define ARM 1
 #endif
 
-#ifdef _M_IX86 || _M_IX86 || _X86_ || __i386__
+#if defined(_M_IX86) || defined(_M_IX86) || defined(_X86_) || defined(__i386__)
 #define X86 1
 #endif
 
+#define MAX_LABEL_NUM 0xff
 
 /*
  * Big endian	    __BYTE_ORDER	__BIG_ENDIAN
  * Little endian    __BYTE_ORDER	__LITTLE_ENDIAN
  */
 
-typedef uint16_t sa_family_t;
+typedef uint16_t SocAddrFamily;
 
 enum {
     EndianUnkown,
@@ -72,21 +75,41 @@ enum Result {
     ResNotSet = INT32_MAX
 };
 
-struct timeval {
+enum PacketLabel {
+    PLNone,
+    PLPCAP,
+    PLEthernet,
+
+};
+
+// internal implementation of the Windows/*Nix timeval struct
+typedef struct TimeVal {
     long tv_sec;
     long tv_usec;
-};
+} TimeVal;
 
-struct sockaddr {
-    sa_family_t sa_family;
+typedef struct sockaddr {
+    SocAddrFamily sa_family;
     char sa_data[14];
-};
+} SockAddr;
 
-struct Packet {
-    struct timeval timeStamp;
-    size_t packetLength;
+typedef struct PacketInfo {
+    TimeVal time_stamp;
+    uint32_t packet_length;
     uint8_t data[MAX_PKT_LEN];
-};
+    uint16_t data_ptr;
+    PacketLabel labels[MAX_LABEL_NUM];
+    size_t label_ptr;
+} PacketInfo;
 
+typedef struct EthernetAddress {
+    uint8_t addr[6];
+} EthernetAddress;
 
+typedef struct IPV4Address {
+    union {
+        uint32_t i;
+        uint8_t b[4];
+    };
+} IPV4Address;
 

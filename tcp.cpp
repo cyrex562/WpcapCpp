@@ -1,60 +1,64 @@
+#include "tcp.h"
 #include <cstdint>
-#include <cstdio>
+#include <vector>
 #include "utils.h"
 
-#include "tcp.h"
+
 
 /*
 * Process a TCP Frame
 */
-void processTCPFrame(const uint8_t* pktData, uint32_t ptr, uint32_t ipPayloadLen) {
-    log(LLDebug, "TCP Frame:\n");
-    auto tcpHdr = (struct TCPHeader*)&pktData[ptr];
-    auto dstPort = _ntohs(tcpHdr->dstPort);
-    auto srcPort = _ntohs(tcpHdr->srcPort);
+void processTCPFrame(std::vector<PacketInfo> packet_table, 
+                        size_t index, 
+                        uint32_t ipPayloadLen) {
+    Log(LLDebug, "TCP Frame:\n");
+    auto pkt_info = packet_table[index];
+    auto tcpHdr = (struct TCPHeader*)&pkt_info.data[pkt_info.data_ptr];
+    auto dstPort = NToHS(tcpHdr->dstPort);
+    auto srcPort = NToHS(tcpHdr->srcPort);
     auto dataOffset = tcpHdr->doff * 4;
-    auto payloadPtr = ptr + dataOffset;
-    log(LLDebug, " SRC Port: %hu\n", srcPort);
-    log(LLDebug, " DST Port: %hu\n", dstPort);
-    log(LLDebug, " Data Offset: %hu\n", tcpHdr->doff);
-    log(LLDebug, " Flags: FIN: %hhu, SYN: %hhu, RST: %hhu, PSH: %hhu, ACK: %hhu, URG: %hhu\n", tcpHdr->fin, tcpHdr->syn, tcpHdr->rst, tcpHdr->psh, tcpHdr->ack, tcpHdr->urg);
+    auto payloadPtr = pkt_info.data_ptr + dataOffset;
+    Log(LLDebug, " SRC Port: %hu\n", srcPort);
+    Log(LLDebug, " DST Port: %hu\n", dstPort);
+    Log(LLDebug, " Data Offset: %hu\n", tcpHdr->doff);
+    Log(LLDebug, " Flags: FIN: %hhu, SYN: %hhu, RST: %hhu, PSH: %hhu, ACK: %hhu, URG: %hhu\n", tcpHdr->fin, tcpHdr->syn, tcpHdr->rst, tcpHdr->psh, tcpHdr->ack, tcpHdr->urg);
     if (dstPort == 5222 || srcPort == 5222) {
-        log(LLDebug, "XMPP frame:\n");
+        Log(LLDebug, "XMPP frame:\n");
         // TODO: parse XMPP
-        printBytesAndText(&pktData[payloadPtr], ipPayloadLen - dataOffset);
+        PrintBytesAndText(&pkt_info.data[payloadPtr], ipPayloadLen - dataOffset);
     }
     else if (dstPort == 443 || srcPort == 443) {
-        log(LLDebug, "TLS Frame follows:\n");
+        Log(LLDebug, "TLS Frame follows:\n");
         // TODO: process TLS frame
     }
     else if (dstPort == 80 || srcPort == 80) {
-        log(LLDebug, "HTTP Frame:\n");
+        Log(LLDebug, "HTTP Frame:\n");
         // TODO: process HTTP frame
-        printBytesAndText(&pktData[payloadPtr], ipPayloadLen - dataOffset);
+        PrintBytesAndText(&pkt_info.data[payloadPtr], ipPayloadLen - dataOffset);
     }
     else if (dstPort == 5671 || srcPort == 5671) {
-        log(LLDebug, "AMQP frame:\n");
-        printBytesAndText(&pktData[payloadPtr], ipPayloadLen - dataOffset);
+        Log(LLDebug, "AMQP frame:\n");
+        PrintBytesAndText(&pkt_info.data[payloadPtr], ipPayloadLen - dataOffset);
     }
     else if (dstPort == 8009 || srcPort == 8009) {
-        log(LLDebug, "Unknown protocol on port 8009\n");
-        printBytesAndText(&pktData[payloadPtr], ipPayloadLen - dataOffset);
+        Log(LLDebug, "Unknown protocol on port 8009\n");
+        PrintBytesAndText(&pkt_info.data[payloadPtr], ipPayloadLen - dataOffset);
     }
     else if (dstPort == 8008 || srcPort == 8008) {
-        log(LLDebug, "Unknown protocol on port 8008\n");
-        printBytesAndText(&pktData[payloadPtr], ipPayloadLen - dataOffset);
+        Log(LLDebug, "Unknown protocol on port 8008\n");
+        PrintBytesAndText(&pkt_info.data[payloadPtr], ipPayloadLen - dataOffset);
 
     }
     else if (dstPort == 8060 || srcPort == 8060) {
-        log(LLDebug, "Unknown protocol on port 8060\n");
-        printBytesAndText(&pktData[payloadPtr], ipPayloadLen - dataOffset);
+        Log(LLDebug, "Unknown protocol on port 8060\n");
+        PrintBytesAndText(&pkt_info.data[payloadPtr], ipPayloadLen - dataOffset);
     }
     else if (dstPort == 5228 || srcPort == 5228) {
-        log(LLDebug, "Unknown protocol on port 5228\n");
-        printBytesAndText(&pktData[payloadPtr], ipPayloadLen - dataOffset);
+        Log(LLDebug, "Unknown protocol on port 5228\n");
+        PrintBytesAndText(&pkt_info.data[payloadPtr], ipPayloadLen - dataOffset);
     }
     else {
-        log(LLWarning, ", unhandled app proto\n");
-        printBytes(&pktData[payloadPtr], ipPayloadLen - dataOffset);
+        Log(LLWarning, ", unhandled app proto\n");
+        PrintBytes(&pkt_info.data[payloadPtr], ipPayloadLen - dataOffset);
     }
 }

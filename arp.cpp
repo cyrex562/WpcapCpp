@@ -1,69 +1,69 @@
+#include "arp.h"
 #include <cstdint>
 #include <cstdio>
-#include "ethernet.h"
-#include "ip.h"
-#include "arp.h"
 #include "utils.h"
+#include <vector>
+
 
 /*
  *
  */
-char *arpHTypeToStr(uint16_t hType) {
-    static char arpHtypeStr[64] = { 0 };
-    switch(hType) {
+char *ARPHTypeToStr(uint16_t h_type) {
+    static char arp_htype_str[64] = { 0 };
+    switch(h_type) {
     case hTypeReserved:
-        sprintf(arpHtypeStr, "%s", "Reserved");
+        sprintf(arp_htype_str, "%s", "Reserved");
         break;
     case hTypeEthernet:
-        sprintf(arpHtypeStr, "%s", "Ethernet");
+        sprintf(arp_htype_str, "%s", "Ethernet");
         break;
     case hTypeIEEE802:
-        sprintf(arpHtypeStr, "%s", "IEEE 802");
+        sprintf(arp_htype_str, "%s", "IEEE 802");
         break;
     case hTypeFiberChan:
-        sprintf(arpHtypeStr, "%s", "Fiber Channel");
+        sprintf(arp_htype_str, "%s", "Fiber Channel");
         break;
     case hTypeSerial:
-        sprintf(arpHtypeStr, "%s", "Serial");
+        sprintf(arp_htype_str, "%s", "Serial");
         break;
     case hTypeMILSTD188_220:
-        sprintf(arpHtypeStr, "%s", "MIL-STD-188-220");
+        sprintf(arp_htype_str, "%s", "MIL-STD-188-220");
         break;
     case hTypeTwinAx:
-        sprintf(arpHtypeStr, "%s", "Twinaxial");
+        sprintf(arp_htype_str, "%s", "Twinaxial");
         break;
     case hTypeEUI64:
-        sprintf(arpHtypeStr, "%s", "EUI-64");
+        sprintf(arp_htype_str, "%s", "EUI-64");
         break;
     case hTypeIPARPISO7816_3:
-        sprintf(arpHtypeStr, "%s", "IP ARP over ISO 7816-3");
+        sprintf(arp_htype_str, "%s", "IP ARP over ISO 7816-3");
         break;
     case hTypeIPSEC:
-        sprintf(arpHtypeStr, "%s", "IPSEC");
+        sprintf(arp_htype_str, "%s", "IPSEC");
         break;
     case hTypeInfiniband:
-        sprintf(arpHtypeStr, "%s", "Infiniband");
+        sprintf(arp_htype_str, "%s", "Infiniband");
         break;
     case hTypeCAIP25:
-        sprintf(arpHtypeStr, "%s", "CAI P25");
+        sprintf(arp_htype_str, "%s", "CAI P25");
         break;
     default:
-        sprintf(arpHtypeStr, "unk (%hu)", hType);
+        sprintf(arp_htype_str, "unk (%hu)", h_type);
     }
-    return arpHtypeStr;
+    return arp_htype_str;
 }
  
 /*
  *
  */
-char *arpPTypeToStr(uint16_t pType) {
+char *ARPPTypeToStr(uint16_t p_type) {
     static char arpPTypeStr[64] = { 0 };
-    switch(pType) {
+    switch(p_type) {
     case pTypeIP:
         sprintf(arpPTypeStr, "%s", "IPv4");
         break;
     default:
-        sprintf(arpPTypeStr, "unk (%hu)", pType);
+        sprintf(arpPTypeStr, "unk (%hu)", p_type);
     }
     return arpPTypeStr;
 }
@@ -71,50 +71,51 @@ char *arpPTypeToStr(uint16_t pType) {
 /*
  *
  */
-char *arpOpToStr(uint16_t opCode) {
-    static char arpOpCodeStr[64] = { 0 };
-    switch(opCode) {
+char *ARPOpCodeToStr(uint16_t op_code) {
+    static char arp_op_code_str[64] = { 0 };
+    switch(op_code) {
     case arpOpReserved:
-        sprintf(arpOpCodeStr, "%s", "Reserved");
+        sprintf(arp_op_code_str, "%s", "Reserved");
         break;
     case arpOpRequest:
-        sprintf(arpOpCodeStr, "%s", "Request");
+        sprintf(arp_op_code_str, "%s", "Request");
         break;
     case arpOpReply:
-        sprintf(arpOpCodeStr, "%s", "Reply");
+        sprintf(arp_op_code_str, "%s", "Reply");
         break;
     case arpOpReqRev:
-        sprintf(arpOpCodeStr, "%s", "Request Reverse");
+        sprintf(arp_op_code_str, "%s", "Request Reverse");
         break;
     case arpOpRepRev:
-        sprintf(arpOpCodeStr, "%s", "Reply Reverse");
+        sprintf(arp_op_code_str, "%s", "Reply Reverse");
         break;
     case arpOpARPNAK:
-        sprintf(arpOpCodeStr, "%s", "ARP NAK");
+        sprintf(arp_op_code_str, "%s", "ARP NAK");
         break;
     default:
-        sprintf(arpOpCodeStr, "unk (%hu)", opCode);
+        sprintf(arp_op_code_str, "unk (%hu)", op_code);
     }
-    return  arpOpCodeStr;
+    return  arp_op_code_str;
 }
 
 /*
 * Process an ARP frame.
 */
-void processARPFrame(const uint8_t* pktData, uint32_t ptr) {
-    printf("ARP Frame\n");
-    auto arpHdr = (struct ARPHeader*)&pktData[ptr];
-    auto hType = _ntohs(arpHdr->hType);
-    auto pType = _ntohs(arpHdr->pType);
-    auto opCode = _ntohs(arpHdr->operation);
-    printf("\tHTYPE: %s (%#04x)\n", arpHTypeToStr(hType), hType);
-    printf("\tPTYPE: %s (%#04x)\n", arpPTypeToStr(pType), pType);
-    printf("\tHLEN: %#02x\n", arpHdr->hLen);
-    printf("\tPLEN: %0#2x\n", arpHdr->pLen);
-    // TODO: convert opcode to string
-    printf("\tOPER: %s (%#04x)\n", arpOpToStr(opCode), opCode);
-    printf("\tSHA: %s\n", etherAddrToStr(&arpHdr->sndHWAddr));
-    printf("\tSPA: %s\n", ipv4AddrToStr(&arpHdr->sndProtoAddr));
-    printf("\tTHA: %s\n", etherAddrToStr(&arpHdr->tgtHWAddr));
-    printf("\tTPA: %s\n", ipv4AddrToStr(&arpHdr->tgtProtoAddr));
+void ParseARPFrame(std::vector<PacketInfo> packet_table, size_t index) {
+    // TODO: insert mac addresses into set.
+    LogDebug("ARP Frame:\n");
+    auto pkt_info = packet_table[index];
+    auto arp_hdr = (struct ARPHeader*)&pkt_info.data[pkt_info.data_ptr];
+    auto h_type = NToHS(arp_hdr->hType);
+    auto p_type = NToHS(arp_hdr->pType);
+    auto op_code = NToHS(arp_hdr->operation);
+    LogDebug("\tHTYPE: %s (%#04x)\n", ARPHTypeToStr(h_type), h_type);
+    LogDebug("\tPTYPE: %s (%#04x)\n", ARPPTypeToStr(p_type), p_type);
+    LogDebug("\tHLEN: %#02x\n", arp_hdr->hLen);
+    LogDebug("\tPLEN: %0#2x\n", arp_hdr->pLen);
+    LogDebug("\tOPER: %s (%#04x)\n", ARPOpCodeToStr(op_code), op_code);
+    LogDebug("\tSHA: %s\n", EtherAddrToStr(&arp_hdr->sndHWAddr));
+    LogDebug("\tSPA: %s\n", IPV4AddrToStr(&arp_hdr->sndProtoAddr));
+    LogDebug("\tTHA: %s\n", EtherAddrToStr(&arp_hdr->tgtHWAddr));
+    LogDebug("\tTPA: %s\n", IPV4AddrToStr(&arp_hdr->tgtProtoAddr));
 }

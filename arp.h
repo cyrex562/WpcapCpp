@@ -1,4 +1,7 @@
 #pragma once
+#include "defines.h"
+#include <cstdint>
+#include <vector>
 
 enum hType {
     hTypeReserved = 0,
@@ -73,4 +76,4 @@ struct ARPHeader {
 }; // 28 bytes
 #pragma pack(pop)
 
-void processARPFrame(const uint8_t* pktData, uint32_t ptr);
+void ParseARPFrame(std::vector<PacketInfo> packet_table, size_t index);

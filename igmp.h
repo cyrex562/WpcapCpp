@@ -1,4 +1,7 @@
 #pragma once
+#include <cstdint>
+#include <vector>
+#include "defines.h"
 
 /**/
 enum IGMPType {
@@ -72,5 +75,6 @@ struct IGMPv2Header {
     uint16_t igmpChecksum;
     uint32_t groupAddress;
 };
+#pragma pack(pop)
 
-void processIGMPFrame(const uint8_t* pktData, uint32_t ptr);
+void ParseIGMPFrame(std::vector<PacketInfo> packet_table, size_t index);

@@ -72,7 +72,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <WarningLevel>Level4</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
@@ -99,13 +99,18 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="arp.cpp" />
     <ClCompile Include="ethernet.cpp" />
     <ClCompile Include="igmp.cpp" />
     <ClCompile Include="ip.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="packetringbuffer.cpp" />
+    <ClCompile Include="packet_ring_buffer.cpp" />
     <ClCompile Include="pcap.cpp" />
     <ClCompile Include="tcp.cpp" />
     <ClCompile Include="udp.cpp" />
@@ -123,7 +128,7 @@
     <ClInclude Include="ethernet.h" />
     <ClInclude Include="igmp.h" />
     <ClInclude Include="ip.h" />
-    <ClInclude Include="PacketRingBuffer.h" />
+    <ClInclude Include="packet_ring_buffer.h" />
     <ClInclude Include="pcap.h" />
     <ClInclude Include="tcp.h" />
     <ClInclude Include="udp.h" />

@@ -1,11 +1,10 @@
+#include "igmp.h"
 #include <cstdint>
 #include <cstdio>
-
-#include "igmp.h"
 #include "utils.h"
+#include <vector>
 
-
-char* igmpTypeToStr(uint8_t igmpType) {
+char* IGMPTypeToStr(uint8_t igmpType) {
     static char igmpTypeStr[64] = { 0 };
     switch (igmpType) {
     case createGrpReq:
@@ -78,7 +77,7 @@ char* igmpTypeToStr(uint8_t igmpType) {
     return igmpTypeStr;
 }
 
-char* igmpCodeToStr(uint8_t igmpCode, bool request) {
+char* IGMPCodeToStr(uint8_t igmpCode, bool request) {
     static char igmpCodeStr[64] = { 0 };
     if (request) {
         switch (igmpCode) {
@@ -120,33 +119,37 @@ char* igmpCodeToStr(uint8_t igmpCode, bool request) {
 /*
 * Process an IGMP Frame
 */
-void processIGMPFrame(const uint8_t* pktData, uint32_t ptr) {
-    log(LLDebug, "IGMP frame\n");
-    auto type = (uint8_t)pktData[ptr];
-    log(LLDebug, "\ttype: %s (%hhu)\n", igmpTypeToStr(type), type);
+void ParseIGMPFrame(std::vector<PacketInfo> packet_table, size_t index) {
+    LogDebug("IGMP frame\n");
+    auto pkt_info = packet_table[index];
+    auto type = (uint8_t)pkt_info.data[pkt_info.data_ptr];
+    LogDebug("\ttype: %s (%hhu)\n", IGMPTypeToStr(type), type);
     if (type <= 8) {
         //igmpv0
-        auto igmpHdr = (struct IGMPv0Header*)&pktData[ptr];
-        auto isRequest = true;
-        if (igmpHdr->type == 2 || igmpHdr->type == 4 || igmpHdr->type == 6 || igmpHdr->type == 8) {
-            isRequest = false;
+        auto igmp_hdr = (struct IGMPv0Header*)&pkt_info.data[pkt_info.data_ptr];
+        auto is_request = true;
+        if (igmp_hdr->type == 2 
+            || igmp_hdr->type == 4 
+            || igmp_hdr->type == 6 
+            || igmp_hdr->type == 8) {
+            is_request = false;
         }
         
-        log(LLDebug, "\tcode: %s (%hhu)\n", igmpCodeToStr(igmpHdr->code, isRequest), igmpHdr->code);
-        log(LLDebug, "\tidentifier: %08x\n", _ntohl(igmpHdr->identifier));
+        LogDebug("\tcode: %s (%hhu)\n", 
+            IGMPCodeToStr(igmp_hdr->code, is_request), igmp_hdr->code);
+        LogDebug("\tidentifier: %08x\n", NToHL(igmp_hdr->identifier));
         
-        log(LLDebug, "\taccessKey: %016llx\n", igmpHdr->accessKey);
+        LogDebug("\taccessKey: %016llx\n", igmp_hdr->accessKey);
     } else if (type <= 0x13) {
         //igmpv1
-        auto igmpHdr = (struct IGMPv1Header*)&pktData[ptr];
-        log(LLDebug, "\tgroupAddress: %08x\n", _ntohl(igmpHdr->groupAddress));
+        auto igmp_hdr = (struct IGMPv1Header*)&pkt_info.data[pkt_info.data_ptr];
+        LogDebug("\tgroupAddress: %08x\n", NToHL(igmp_hdr->groupAddress));
     } else if (type <= 0x32) {
         //igmpv2/v3
-        auto igmpHdr = (struct IGMPv2Header*)&pktData[ptr];
-        log(LLDebug, "\tmax Response Time: %hhu\n", igmpHdr->maxRespTime);
-        log(LLDebug, "\tgroupAddress: %08x\n", _ntohl(igmpHdr->groupAddress));
+        auto igmp_hdr = (struct IGMPv2Header*)&pkt_info.data[pkt_info.data_ptr];
+        LogDebug("\tmax Response Time: %hhu\n", igmp_hdr->maxRespTime);
+        LogDebug("\tgroupAddress: %08x\n", NToHL(igmp_hdr->groupAddress));
     } else {
-        log(LLError, "unsupported igmp type: %hhu\n", type);
+        LogError("unsupported igmp type: %hhu\n", type);
     }
-    return;
 }

@@ -1,5 +1,8 @@
 #pragma once
 
+#include <cstdint>
+#include "packet_ring_buffer.h"
+
 struct TCPHeader {
     uint16_t srcPort;
     uint16_t dstPort;
@@ -23,4 +26,6 @@ struct TCPHeader {
     uint16_t urgPtr;
 };
 
-void processTCPFrame(const uint8_t* pktData, uint32_t ptr, uint32_t ipPayloadLen);
+void processTCPFrame(std::vector<PacketInfo> packet_table, 
+                     size_t index, 
+                     uint32_t ipPayloadLen);

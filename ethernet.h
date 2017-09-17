@@ -1,5 +1,8 @@
 #pragma once
 
+#include "defines.h"
+#include <vector>
+
 /*
 * http://www.networksorcery.com/enp/protocol/802/ethertypes.htm
 */
@@ -28,18 +31,18 @@ enum LSAPValue {
     LSAGlobalDSAP = 0xFF
 };
 
-struct EthernetAddress {
-    uint8_t addr[6];
-};
+
 
 /*
 * http://www.networksorcery.com/enp/protocol/ethernet.htm
 */
+#pragma pack(push, 1)
 struct EthernetHeader {
     struct EthernetAddress srcMacAddr;
     struct EthernetAddress dstMacAddr;
     uint16_t etherType;
 };
+#pragma pack(pop)
 
 /*
 *  https://en.wikipedia.org/wiki/IEEE_802.2#cite_note-LAN_tech-3
@@ -103,6 +106,8 @@ struct BridgePDU {
     uint16_t vers3Length;
 };
 
-char* etherAddrToStr(EthernetAddress* etherAddrBytes);
 
-void processLLCFrame(const uint8_t* pktData, uint32_t ptr);
+
+void ParseLLCFrame(std::vector<PacketInfo> packet_table, size_t index);
+
+void ParseEthernetFrame(std::vector<PacketInfo> packet_table, size_t index);

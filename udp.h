@@ -1,4 +1,7 @@
 #pragma once
+#include <cstdint>
+#include <vector>
+#include "defines.h"
 
 struct UDPHeader {
     uint16_t srcPort;
@@ -7,4 +10,4 @@ struct UDPHeader {
     uint16_t csum;
 };
 
-void processUDPFrame(const uint8_t* pktData, uint32_t ptr);
+void ProcessUDPFrame(std::vector<PacketInfo> packet_table, size_t index);
