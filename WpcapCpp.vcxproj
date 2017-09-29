@@ -107,6 +107,7 @@
   <ItemGroup>
     <ClCompile Include="arp.cpp" />
     <ClCompile Include="ethernet.cpp" />
+    <ClCompile Include="hat.cpp" />
     <ClCompile Include="igmp.cpp" />
     <ClCompile Include="ip.cpp" />
     <ClCompile Include="main.cpp" />
@@ -126,6 +127,7 @@
     <ClInclude Include="arp.h" />
     <ClInclude Include="defines.h" />
     <ClInclude Include="ethernet.h" />
+    <ClInclude Include="hat.h" />
     <ClInclude Include="igmp.h" />
     <ClInclude Include="ip.h" />
     <ClInclude Include="packet_ring_buffer.h" />
